@@ -7,10 +7,7 @@ const {isRoomIdPresent,createRoom,updateRoom,getCode}=require('./database');
 const server=http.createServer(app);
 const io=new Server(server);
 
-app.use(express.static('build'));
-app.use((req,res)=>{
-    res.sendFile(__dirname+'/build/index.html');
-});
+
 const userSocketMap={};//at runtime
 
 
