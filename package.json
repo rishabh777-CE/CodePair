@@ -17,6 +17,7 @@
     "firebase": "^10.5.0",
     "firebase-admin": "^11.11.0",
     "fs": "^0.0.1-security",
+    "mongodb": "^6.2.0",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.0.1",
     "os-browserify": "^0.3.0",
@@ -35,10 +36,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start front": "react-scripts start", 
-    "start":"npm run build",
-    "server:dev": "nodemon server.js",
-    "server:prod": "node server.js",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
