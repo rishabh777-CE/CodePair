@@ -1,54 +1,48 @@
-const { initializeApp } = require("firebase/app");
-const {getFirestore,collection,getDocs,addDoc,query,where, updateDoc}=require('firebase/firestore');
+const { MongoClient } = require('mongodb');
+const { connect } = require('socket.io-client');
+require("dotenv").config();
+// TODO: Replace the following with your MongoDB connection string
 
-// TODO: Replace the following with your app's Firebase project configuration
-// See: https://firebase.google.com/docs/web/learn-more#config-object
-const firebaseConfig = {
-  apiKey: `${process.env.REACT_APP_API_KEY}`,
-  authDomain: `${process.env.REACT_APP_AUTH_DOMAIN}`,
-  projectId:`${process.env.REACT_APP_PROJECT_ID}`,
-  storageBucket: `${process.env.REACT_APP_STORAGE_BUCKET}`,
-  messagingSenderId: `${process.env.REACT_APP_MESSAGING_SENDER_ID}`,
-  appId: `${process.env.REACT_APP_APP_ID}`,
-  measurementId:`${process.env.REACT_APP_MEASUREMENT_ID}`,
+const uri=`mongodb+srv://${process.env.MONGO_URL}`;
+
+
+// Initialize MongoDB client
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+async function connectToDatabase() {
+  try {
+    await client.connect();
+    console.log('Connected to database');
+  } catch (err) {
+    console.error(err);
+  }
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-
-// Initialize Realtime Database and get a reference to the service
-const db = getFirestore(app);
-
-const roomRef=collection(db,'rooms');
-
+// Get a reference to the database and collection
+const db = client.db('codepair');
+const roomCollection = db.collection('rooms');
 
 async function isRoomIdPresent(roomId) {
-  const q = query(collection(db, 'rooms'), where('roomId', '==', roomId));
-  const querySnapshot = await getDocs(q);
-  return !querySnapshot.empty;
+  const query = { roomId };
+  const count = await roomCollection.countDocuments(query);
+  return count > 0;
 }
 
 async function createRoom(roomId, code) {
-  await addDoc(roomRef, {
-    roomId,
-    code,
-  });
+  const document = { roomId, code };
+  await roomCollection.insertOne(document);
 }
 
 async function updateRoom(roomId, code) {
-  const q = query(roomRef, where('roomId', '==', roomId));
-  const querySnapshot = await getDocs(q);
-  const roomDoc = querySnapshot.docs[0];
-  await updateDoc(roomDoc.ref, { code:code });
+  const filter = { roomId };
+  const update = { $set: { code } };
+  await roomCollection.updateOne(filter, update);
 }
 
 async function getCode(roomId) {
-  const q = query(collection(db, 'rooms'), where('roomId', '==', roomId));
-  const querySnapshot = await getDocs(q);
-  if(querySnapshot.empty)return null;
-  const roomDoc = querySnapshot.docs[0];
-  return roomDoc.data().code;
+  const query = { roomId };
+  const document = await roomCollection.findOne(query);
+  return document ? document.code : null;
 }
 
-module.exports = { isRoomIdPresent, createRoom, updateRoom, getCode};
+module.exports = { connectToDatabase,isRoomIdPresent, createRoom, updateRoom, getCode };
