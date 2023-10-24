@@ -1,14 +1,20 @@
 const express=require('express');
+
 const app=express();
 const http=require('http');
 const {Server}=require('socket.io');
 const { ACTIONS } = require('./src/Actions');
-const {isRoomIdPresent,createRoom,updateRoom,getCode}=require('./database');
+const {isRoomIdPresent,createRoom,updateRoom,getCode,connectToDatabase}=require('./database');
+const { connect } = require('http2');
 const server=http.createServer(app);
 const io=new Server(server);
 
-
+// app.use(express.static('build'));
+// app.use((req,res)=>{
+//     res.sendFile(__dirname+'/build/index.html');
+// });
 const userSocketMap={};//at runtime
+connectToDatabase();
 
 
 function getClients(roomID) {
@@ -82,8 +88,8 @@ io.on('connection',(socket)=>{
 
         try{
           
-            const code=await getCode(roomId);
-            if(!code)code=' ';
+            const code=await getCode(roomId)||' ';
+          
             io.to(socketId).emit('code-change',{
                 code,
             });
